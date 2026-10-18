@@ -1,0 +1,42 @@
+name: Bug report
+description: Report unexpected library behavior with reproduction steps.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Library version or commit
+      placeholder: Version from mix.exs or the commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include Elixir/OTP, Phoenix LiveView and operating system versions, the configured styles, and whether a Pro license key is set (never the key itself).
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Describe the smallest reproducible example, such as a template and the `config :hugeicons` used.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Remove license keys, tokens and other secrets before sharing. Do not paste Pro icon markup.

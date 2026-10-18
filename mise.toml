@@ -1,0 +1,15 @@
+[tools]
+elixir = "1.20.4-otp-29"
+erlang = "29"
+
+# Shared envs (versioned). Secrets and local overrides go in
+# `mise.local.toml` (gitignored); see `mise.local.toml.example`.
+
+[tasks.setup]
+description = "Install Hex, Rebar and the dependencies"
+run = ["mix local.hex --force", "mix local.rebar --force", "mix deps.get"]
+
+[tasks.precommit]
+description = "Check compilation, dependencies, formatting, Credo, Doctor, docs, Dialyzer, and tests"
+run = "mix precommit"
+

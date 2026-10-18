@@ -1,0 +1,28 @@
+name: Feature request
+description: Propose a feature with a concrete problem and expected outcome.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Explain who needs this and what they are trying to accomplish.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome
+      description: Describe observable behavior and what would make the feature successful.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution and alternatives
+      description: Include template examples if helpful.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Compatibility impact
+      description: Note public API, configuration, compile time or payload concerns, if known.

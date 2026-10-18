@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  merge_group:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  conventions:
+    name: Conventions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
+      - name: Validate PR title
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: elixir .github/scripts/check_pr_title.exs
+      - name: Validate project version and release tag
+        run: elixir .github/scripts/check_version.exs
+
+  elixir:
+    name: Elixir checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MIX_ENV: test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
+      - name: Resolve BEAM cache version
+        id: beam
+        run: elixir -e 'IO.puts("version=#{System.version()}-#{:erlang.system_info(:version)}")' >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-beam-${{ steps.beam.outputs.version }}-test-${{ hashFiles('mise.toml', 'mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-beam-${{ steps.beam.outputs.version }}-test-
+      - name: Install Hex and Rebar
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+      - run: mix deps.get --check-locked
+      - run: mix hex.audit
+      - run: mix format --check-formatted
+      - run: mix compile --warnings-as-errors
+      - run: mix deps.unlock --check-unused
+      - run: mix credo --strict
+      - run: mix doctor --summary
+      - run: mix docs --warnings-as-errors
+      - run: mix dialyzer --format github
+      - run: mix test --cover --warnings-as-errors
+      - name: Check that the Hex package holds no icons
+        run: |
+          mix hex.build --unpack --output "$RUNNER_TEMP/package"
+          if find "$RUNNER_TEMP/package" -name '*.etf' -o -name '*Icon.js' | grep -q .; then
+            echo "The package must not contain icons"; exit 1
+          fi

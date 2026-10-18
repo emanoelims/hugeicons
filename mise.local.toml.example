@@ -1,0 +1,6 @@
+# Copy to `mise.local.toml` (gitignored) and fill in the values.
+# mise loads that file automatically on top of `mise.toml`.
+[env]
+# Optional: your Hugeicons Pro Universal License Key (hugeicons.com → Account →
+# Tokens). Without it only the free stroke-rounded icons are downloaded.
+HUGEICONS_LICENSE_KEY = ""
