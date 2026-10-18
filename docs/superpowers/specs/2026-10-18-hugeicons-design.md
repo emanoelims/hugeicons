@@ -21,7 +21,7 @@ From the [license agreement](https://hugeicons.com/license-agreement) and the
 - One seat per person who works with Pro icons.
 - Open question: "any product that competes directly with Hugeicons". An
   unofficial wrapper that only downloads with the user's key probably is not, but
-  this is to be confirmed with Hugeicons before publishing to Hex (issue).
+  this is to be confirmed with Hugeicons before publishing to Hex (#1).
 
 Hence: the package holds only code; icons are downloaded into the host's
 `_build` with the host's key; the repository and docs show only free icons.
@@ -36,7 +36,7 @@ Hence: the package holds only code; icons are downloaded into the host's
   duotone-rounded, twotone-rounded.
 - Each icon is `dist/esm/<Name>Icon.js` exporting
   `[["path", {d: "...", stroke: "currentColor", strokeWidth: "1.5", key: "0"}], ...]`.
-  The Pro format was not verified (no key at hand): issue.
+  The Pro format was not verified (no key at hand): #2.
 - Stroke widths in the free set: 20,313 × `1.5`, about 40 deliberate others
   (`2`, `1.3`, `3`…) on details.
 
@@ -126,7 +126,14 @@ assigns all four styles' paths on every call.
 
 ## Deferred (GitHub issues)
 
-Licensing/naming confirmation before Hex, Pro format verification, version
-pinning, benchmark scripts in the repo, demo app with a free-icon gallery,
-compiling only used icons, automatic `aria-hidden` with a title, CI matrix for
-older Elixir/LiveView.
+- #1 licensing and naming confirmation before Hex
+- #2 Pro format verification with a real key
+- #3 version pinning for reproducible builds
+- #4 benchmark scripts in the repository
+- #5 demo app with a free-icon gallery
+- #6 compiling only the icons a project uses
+- #7 automatic `aria-hidden`/`role` with a title
+- #8 global attributes resent on every re-render
+- #9 clearer compile-time feedback for unknown names
+- #10 supported Elixir/LiveView range and CI matrix
+- #12 rulesets and repository settings

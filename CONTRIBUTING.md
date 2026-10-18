@@ -109,8 +109,9 @@ for it. CI checks that the tag matches `mix.exs` exactly. Prereleases may use
 `X.Y.Z-rc.1`. Version increments are reviewed manually. Do not move or reuse
 release tags.
 
-The package is not published to Hex yet: publishing waits for the questions in
-the `hex` issues (licensing and naming with Hugeicons). When it is, check with
+The package is not published to Hex yet: publishing waits for
+[#1](https://github.com/emanoelims/hugeicons/issues/1) (licensing and naming
+with Hugeicons). When it is, check with
 `mix hex.build --unpack` that the package holds only `package: [files: ...]`
 from `mix.exs` before `mix hex.publish`.
 
