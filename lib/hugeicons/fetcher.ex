@@ -81,11 +81,20 @@ defmodule Hugeicons.Fetcher do
     dist = get_in(metadata, ["versions", version, "dist"]) || raise Error, "#{package} has no published version"
     tarball_url = same_host!(dist["tarball"], registry, package)
 
-    tarball = get!(req, tarball_url, package)
+    info("downloading #{package} #{version}")
+    {microseconds, tarball} = :timer.tc(fn -> get!(req, tarball_url, package) end)
+    info("downloaded #{package} #{version} (#{megabytes(byte_size(tarball))} MB in #{seconds(microseconds)} s)")
     verify_integrity!(tarball, dist, package)
 
     %{version: version, origin: tier, icons: extract!(tarball, package)}
   end
+
+  # Downloads happen inside `mix compile` and can take minutes for the filled Pro
+  # styles: say what is going on instead of leaving a silent compiler.
+  defp info(message), do: Mix.shell().info("hugeicons: " <> message)
+
+  defp megabytes(bytes), do: :erlang.float_to_binary(bytes / 1_000_000, decimals: 1)
+  defp seconds(microseconds), do: :erlang.float_to_binary(microseconds / 1_000_000, decimals: 1)
 
   defp registry(:free), do: @npm_registry
   defp registry(:pro), do: @pro_registry

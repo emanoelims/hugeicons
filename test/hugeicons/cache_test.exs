@@ -67,6 +67,49 @@ defmodule Hugeicons.CacheTest do
     assert downloads() == 2
   end
 
+  test "load! downloads the styles in parallel", %{config: config, tarball: tarball} do
+    test = self()
+    packages = ~w(@hugeicons-pro/core-stroke-rounded @hugeicons-pro/core-solid-rounded)
+
+    Req.Test.stub(Hugeicons.Fetcher, fn conn ->
+      package = Enum.find(packages, &String.starts_with?(conn.request_path, "/" <> &1 <> "/-/"))
+
+      if package do
+        # Hold each tarball until the test saw both downloads start: sequential
+        # downloads would never get here for the second package.
+        send(test, {:downloading, package, self()})
+        receive do: (:go -> Plug.Conn.send_resp(conn, 200, tarball))
+      else
+        [package] = Enum.filter(packages, &(conn.request_path == "/" <> String.replace(&1, "/", "%2F")))
+        url = "https://npm.hugeicons.com/#{package}/-/package-1.0.0.tgz"
+        integrity = "sha512-" <> Base.encode64(:crypto.hash(:sha512, tarball))
+
+        Req.Test.json(conn, %{
+          "dist-tags" => %{"latest" => "1.0.0"},
+          "versions" => %{"1.0.0" => %{"dist" => %{"tarball" => url, "integrity" => integrity}}}
+        })
+      end
+    end)
+
+    config = %{config | styles: ["stroke-rounded", "solid-rounded"], license_key: "k"}
+    task = Task.async(fn -> Cache.load!(config, @req) end)
+
+    assert_receive {:downloading, first, first_pid}
+    assert_receive {:downloading, second, second_pid}
+    assert Enum.sort([first, second]) == Enum.sort(packages)
+
+    send(first_pid, :go)
+    send(second_pid, :go)
+
+    assert %{"stroke-rounded" => %{origin: :pro}, "solid-rounded" => %{origin: :pro}} = Task.await(task)
+  end
+
+  test "load! raises the original error of a failing style", %{config: config} do
+    config = %{config | styles: ["stroke-rounded", "solid-rounded"]}
+
+    assert_raise Hugeicons.Error, ~r/solid-rounded is a Hugeicons Pro style/, fn -> Cache.load!(config, @req) end
+  end
+
   test "load! returns every configured style", %{tmp_dir: tmp} do
     config =
       Config.new!(

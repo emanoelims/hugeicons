@@ -64,8 +64,9 @@ config :hugeicons,
 Available styles: `stroke-rounded`, `stroke-sharp`, `stroke-standard`,
 `solid-rounded`, `solid-sharp`, `solid-standard`, `bulk-rounded`,
 `duotone-rounded` and `twotone-rounded`. With a key, every style, `stroke-rounded`
-included, comes from the Pro registry. Each compiled style adds about 8 MB to the
-running application, so list only the ones you use.
+included, comes from the Pro registry. Each compiled style adds 7 to 19 MB of
+code to the running application (the filled styles are the largest), so list only
+the ones you use.
 
 The key is only needed at compile time and is only sent to `npm.hugeicons.com`.
 In CI, expose it as a secret; in Docker, use a BuildKit secret rather than a build
@@ -77,6 +78,23 @@ RUN --mount=type=secret,id=hugeicons,env=HUGEICONS_LICENSE_KEY mix compile
 
 Run `mix hugeicons.install` to download the configured styles again, for example
 after a new Hugeicons release.
+
+### Cold builds
+
+Each style is downloaded once per build directory, and the filled Pro styles are
+large: expect minutes rather than seconds on a cold build (compilation prints
+each download). Keep `_build/hugeicons` between builds:
+
+- in CI, cache `_build` (or at least `_build/hugeicons`) keyed by your lockfile
+  and the configured styles;
+- in Docker, use a BuildKit cache mount, which also keeps the downloaded icons
+  out of the image layers:
+
+```dockerfile
+RUN --mount=type=secret,id=hugeicons,env=HUGEICONS_LICENSE_KEY \
+    --mount=type=cache,target=/app/_build/hugeicons \
+    mix compile
+```
 
 ## Usage
 

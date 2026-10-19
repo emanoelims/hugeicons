@@ -107,6 +107,32 @@ share the paths as statics across list items.
 One function per icon (no HEEx) compiled in 6.0 s / 8.2 MB; the chunk ebin is
 9.2 MB per style. Lookup: ~1.6 µs.
 
+### Pro styles (verified with a real key, #2)
+
+All 9 styles, version 4.3.4: same layout as the free package, 6,067 icons each
+with identical names, only allowlisted tags, and the default stroke width `1.5`
+everywhere (9 to 35 icons per style keep a deliberate other width). Bulk draws
+its secondary layer as `opacity="0.4"` with `currentColor`.
+
+| Style | Tarball | Cache | Compile (warm cache) | ebin |
+|---|---|---|---|---|
+| stroke-rounded | 13.7 MB | 1.6 MB | 2.8 s | 9.2 MB |
+| stroke-sharp | 9.7 MB | 1.0 MB | 2.3 s | 6.6 MB |
+| stroke-standard | 9.8 MB | 1.1 MB | 2.5 s | 7.2 MB |
+| solid-rounded | 35.8 MB | 4.6 MB | 3.4 s | 19 MB |
+| solid-sharp | 15.3 MB | 1.8 MB | 2.6 s | 8.9 MB |
+| solid-standard | 22.5 MB | 2.8 MB | 2.9 s | 13 MB |
+| bulk-rounded | 36.4 MB | 4.6 MB | 3.2 s | 19 MB |
+| duotone-rounded | 17.5 MB | 2.2 MB | 3.2 s | 13 MB |
+| twotone-rounded | 14.6 MB | 1.7 MB | 2.5 s | 9.7 MB |
+
+Unpacking and converting a 36 MB tarball takes about 1.2 s (`:erl_tar` 0.9 s,
+conversion 0.3 s). The download itself varies a lot over time for every client:
+the same bulk tarball took 5 s with curl and with Req at one moment, and 15 to
+80 s (once 287 s, during the 9 parallel downloads) at others. Hence parallel
+downloads, progress messages and the CI/Docker caching advice; socket buffer
+tuning looked promising in 3 rounds but was not adopted without more evidence.
+
 ### Function component facts (from LiveView 1.2.8 source)
 
 - `assign_new/3` computes only when the key is absent; attrs with defaults are

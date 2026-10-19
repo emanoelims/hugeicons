@@ -20,6 +20,8 @@ defmodule Hugeicons.FetcherTest do
     assert %{version: "1.0.0", origin: :free, icons: %{"FirstBracketIcon" => "<path " <> _}} =
              Fetcher.fetch!("stroke-rounded", config(), @req)
 
+    assert_received {:mix_shell, :info, ["hugeicons: downloading @hugeicons/core-free-icons 1.0.0"]}
+    assert_received {:mix_shell, :info, ["hugeicons: downloaded @hugeicons/core-free-icons 1.0.0 (0.0 MB in " <> _]}
     assert_received {:request, "GET", @npm <> "/@hugeicons%2Fcore-free-icons", headers}
     assert {"accept", "application/vnd.npm.install-v1+json" <> _} = List.keyfind(headers, "accept", 0)
     refute List.keyfind(headers, "authorization", 0)

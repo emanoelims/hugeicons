@@ -26,7 +26,9 @@ Fixtures use free icons (MIT, with their license file) or synthetic shapes.
 `_build/hugeicons` holds downloaded icons and is ignored by Git.
 
 To try Pro styles locally, put your key in `mise.local.toml` (ignored by Git;
-copy `mise.local.toml.example`). Never commit a key, even temporarily: a
+copy `mise.local.toml.example`). `mise exec -- mix test --only pro` downloads
+every Pro style into a temporary directory, checks them and deletes them; the
+regular suite removes the key from its environment and never uses it. Never commit a key, even temporarily: a
 committed credential must be revoked, not just deleted. Do not paste keys in
 issues, PRs, logs or test output.
 
