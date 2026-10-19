@@ -20,6 +20,10 @@ It installs the dependencies and assets, then serves
 [localhost:4310](http://localhost:4310) (the default in `config/runtime.exs`; set `PORT` to change it). The first
 compilation downloads the free icons (about 13 MB) into `_build/hugeicons`.
 
+Start it through `mise run demo`: the task clears `HUGEICONS_LICENSE_KEY`, which mise
+would otherwise load from the root `mise.local.toml`, so the demo never downloads or
+shows Pro icons.
+
 `mise run precommit:demo` runs this app's `mix precommit` (compilation without
 warnings, unused lockfile entries, formatting and tests); the root
 `mise run precommit` runs it together with the library's.

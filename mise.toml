@@ -16,6 +16,8 @@ run = "mix precommit"
 [tasks."precommit:demo"]
 description = "Check examples/demo: compilation, dependencies, formatting, and tests"
 dir = "{{config_root}}/examples/demo"
+# The demo shows free icons only, even when mise.local.toml holds a Pro key.
+env = { HUGEICONS_LICENSE_KEY = "" }
 run = ["mix deps.get", "mix precommit"]
 
 # In sequence: the library's `mix format` rewrites files that the demo compiles
@@ -31,4 +33,6 @@ run = ["elixir bench/diff.exs", "elixir bench/compile.exs"]
 [tasks.demo]
 description = "Start the demo app (free icons only) on http://localhost:4310"
 dir = "{{config_root}}/examples/demo"
+# The demo shows free icons only, even when mise.local.toml holds a Pro key.
+env = { HUGEICONS_LICENSE_KEY = "" }
 run = ["mix setup", "mix phx.server"]
