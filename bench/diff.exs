@@ -163,7 +163,16 @@ end
 
 {opts, _args} = OptionParser.parse!(System.argv(), strict: [rows: :integer, icon: :string])
 
-case Keyword.get(opts, :rows, 50) do
-  rows when rows > 0 -> Bench.Diff.run(rows, Keyword.get(opts, :icon, "FirstBracketIcon"))
-  rows -> raise ArgumentError, "expected --rows to be positive, got: #{rows}"
+rows = Keyword.get(opts, :rows, 50)
+icon = Keyword.get(opts, :icon, "FirstBracketIcon")
+
+cond do
+  rows <= 0 ->
+    raise ArgumentError, "expected --rows to be positive, got: #{rows}"
+
+  icon not in Hugeicons.names() ->
+    raise ArgumentError, "expected --icon to be a free icon name, like FirstBracketIcon, got: #{icon}"
+
+  true ->
+    Bench.Diff.run(rows, icon)
 end
