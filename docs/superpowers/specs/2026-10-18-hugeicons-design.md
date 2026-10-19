@@ -140,7 +140,16 @@ tuning looked promising in 3 rounds but was not adopted without more evidence.
 - `assign/3` skips marking when the value is identical and the key was given.
 - A component call whose attributes are all literals is not re-evaluated on
   parent re-renders.
-- Global attr defaults are merged key by key with the caller's.
+- Global attr defaults are merged with `Map.merge/2`, but the caller's globals
+  have atom keys: a string-keyed default (`%{"aria-hidden" => "true"}`) is kept
+  next to the caller's value and both render. The accessibility defaults are
+  therefore computed in the expression that renders the globals (#7).
+- `Declarative` assigns the merged globals on every call; the key is never in the
+  incoming assigns, so `assign/3` marks it changed and `{@rest}` is resent
+  whenever the component re-runs (#8, a LiveView limitation).
+- HEEx tracks every assign an expression references, whatever branch an `if`
+  inside it takes; `stroke-width` reads `size` only in the template chosen for
+  `absolute_stroke_width` (#8).
 - `attr values:` warnings come from `@after_verify`; the list is printed in the
   generated docs.
 
@@ -158,8 +167,7 @@ assigns all four styles' paths on every call.
 - #4 benchmark scripts in the repository
 - #5 demo app with a free-icon gallery
 - #6 compiling only the icons a project uses
-- #7 automatic `aria-hidden`/`role` with a title
-- #8 global attributes resent on every re-render
+- #8 global attributes resent on every re-render (needs a LiveView change)
 - #9 clearer compile-time feedback for unknown names
 - #10 supported Elixir/LiveView range and CI matrix
 - #12 rulesets and repository settings

@@ -66,18 +66,11 @@ defmodule HugeiconsTest do
     assert attr_of(text_size, "stroke-width") == "2"
   end
 
-  test "global attributes reach the svg and can override aria-hidden" do
+  test "global attributes reach the svg" do
     assigns = %{}
+    svg = svg(rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" class="size-5" data-x="1" stroke="red" />|))
 
-    svg =
-      svg(
-        rendered_to_string(
-          ~H|<.hugeicons_icon icon="Home01Icon" class="size-5" aria-hidden="false" role="img" data-x="1" />|
-        )
-      )
-
-    assert {attr_of(svg, "class"), attr_of(svg, "aria-hidden"), attr_of(svg, "role"), attr_of(svg, "data-x")} ==
-             {"size-5", "false", "img", "1"}
+    assert {attr_of(svg, "class"), attr_of(svg, "data-x"), attr_of(svg, "stroke")} == {"size-5", "1", "red"}
   end
 
   test "the inner block goes first inside the svg" do
@@ -87,6 +80,53 @@ defmodule HugeiconsTest do
 </.hugeicons_icon>|)
 
     assert html =~ ~r{<svg[^>]*>\s*<title>Close</title>\s*<path}
+  end
+
+  describe "accessibility" do
+    defp occurrences(html, text), do: html |> String.split(text) |> length() |> Kernel.-(1)
+
+    test "an icon without an inner block is hidden from assistive technology" do
+      assigns = %{}
+      html = rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" />|)
+
+      assert occurrences(html, "aria-hidden") == 1
+      assert attr_of(svg(html), "aria-hidden") == "true"
+      assert attr_of(svg(html), "role") == nil
+    end
+
+    test "an icon with a title is exposed as an image" do
+      assigns = %{}
+      html = rendered_to_string(~H|<.hugeicons_icon icon="Cancel01Icon">
+  <title>Close</title>
+</.hugeicons_icon>|)
+
+      assert attr_of(svg(html), "role") == "img"
+      refute html =~ "aria-hidden"
+    end
+
+    test "the caller's aria-hidden and role win and are rendered once" do
+      assigns = %{hidden: "false"}
+
+      shown = rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-hidden={@hidden} aria-label="Home" />|)
+      assert occurrences(shown, "aria-hidden") == 1
+      assert {attr_of(svg(shown), "aria-hidden"), attr_of(svg(shown), "role")} == {"false", nil}
+
+      titled = rendered_to_string(~H|<.hugeicons_icon icon="Cancel01Icon" role="graphics-symbol" aria-hidden="true">
+  <title>Close</title>
+</.hugeicons_icon>|)
+
+      assert occurrences(titled, "role") == 1
+      assert occurrences(titled, "aria-hidden") == 1
+      assert {attr_of(svg(titled), "role"), attr_of(svg(titled), "aria-hidden")} == {"graphics-symbol", "true"}
+    end
+
+    test "an explicit rest map is honored, whatever its key type" do
+      assigns = %{rest: %{"aria-hidden" => "false"}}
+      html = rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" rest={@rest} />|)
+
+      assert occurrences(html, "aria-hidden") == 1
+      assert attr_of(svg(html), "aria-hidden") == "false"
+    end
   end
 
   test "a name computed at runtime that does not exist raises with a suggestion" do
