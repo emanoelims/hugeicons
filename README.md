@@ -142,7 +142,7 @@ unset to always follow the latest release, for example while trying the library.
 | `stroke_width` | `1.5` | Width of the strokes drawn with the default width |
 | `absolute_stroke_width` | `false` | Keeps the stroke width constant on screen whatever the size |
 
-Global attributes (`class`, `id`, `aria-*`, `data-*`, `phx-*`, `fill`, `stroke`, …)
+Global attributes (`class`, `id`, `aria-*`, `data-*`, `phx-*`, `stroke`, …)
 go to the `<svg>`.
 
 A literal icon name that does not exist warns at compile time. A name computed at

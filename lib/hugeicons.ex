@@ -108,8 +108,10 @@ defmodule Hugeicons do
     default: false,
     doc: "keeps the stroke width constant on screen whatever the `size`."
 
+  # No `fill`: the root's static `fill="none"` lets each element choose its fill,
+  # and a caller's `fill` would render a second, ignored `fill` attribute.
   attr :rest, :global,
-    include: ~w(fill stroke),
+    include: ~w(stroke),
     doc: """
     They go to the `<svg>`. With an inner block, `aria-label` or `aria-labelledby`, `role="img"` \
     is added; otherwise `aria-hidden="true"`. Your own `aria-hidden` and `role` take precedence.\
