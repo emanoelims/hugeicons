@@ -81,7 +81,8 @@ RUN --mount=type=secret,id=hugeicons,env=HUGEICONS_LICENSE_KEY mix compile
 ```
 
 Run `mix hugeicons.install` to download the configured styles again, for example
-after a new Hugeicons release.
+after a new Hugeicons release. It then recompiles the `:hugeicons` dependency, so
+the new icons are compiled in whether it comes from Hex, git or a path.
 
 ### Cold builds
 
