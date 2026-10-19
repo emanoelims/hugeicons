@@ -30,7 +30,12 @@ defmodule Mix.Tasks.Hugeicons.SearchTest do
   end
 
   test "lists names starting with the term before the other names containing it" do
-    assert search(["c"]) == ~w(Cabinet02Icon Cancel01Icon AbacusIcon FavouriteIcon FirstBracketIcon Home01Icon)
+    assert search(["c"]) == ~w(Cabinet02Icon Cancel01Icon AbacusIcon FirstBracketIcon)
+  end
+
+  test "does not count the Icon suffix every name shares as containing the term" do
+    assert Search.search(~w(AbacusIcon Contact01Icon PhoneIcon), "on", 20) == ~w(Contact01Icon PhoneIcon)
+    assert Search.search(~w(AbacusIcon FirstBracketIcon), "bracketicon", 20) == ["FirstBracketIcon"]
   end
 
   test "ignores spaces, hyphens and underscores, so words can be passed apart" do
@@ -65,7 +70,7 @@ defmodule Mix.Tasks.Hugeicons.SearchTest do
   end
 
   test "prints at most --limit names" do
-    assert search(["icon", "--limit", "2"]) == ["AbacusIcon", "Cabinet02Icon"]
+    assert search(["0", "--limit", "2"]) == ["Cabinet02Icon", "Cancel01Icon"]
     assert search(["c", "-n", "3"]) == ~w(Cabinet02Icon Cancel01Icon AbacusIcon)
   end
 

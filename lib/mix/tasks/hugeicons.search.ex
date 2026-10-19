@@ -10,7 +10,8 @@ defmodule Mix.Tasks.Hugeicons.Search do
       $ mix hugeicons.search FirstBrackeIcon
 
   Names containing the term come first (those starting with it before the rest),
-  ignoring case, spaces, hyphens and underscores. When fewer than the limit
+  ignoring case, spaces, hyphens and underscores; the `Icon` suffix every name
+  shares counts only when the term runs into it. When fewer than the limit
   contain it, the names closest to the term (by `String.jaro_distance/2`) follow,
   so a typo or another spelling still finds the icon: `favorite` also lists
   `FavouriteIcon`.
@@ -55,11 +56,21 @@ defmodule Mix.Tasks.Hugeicons.Search do
   def search(names, term, limit) do
     term = normalize!(term)
     entries = Enum.map(names, &{normalize(&1), &1})
-    {containing, others} = Enum.split_with(entries, fn {normalized, _name} -> String.contains?(normalized, term) end)
+    {containing, others} = Enum.split_with(entries, fn {normalized, _name} -> contains?(normalized, term) end)
     {prefixed, inner} = Enum.split_with(containing, fn {normalized, _name} -> String.starts_with?(normalized, term) end)
     matches = (prefixed ++ inner) |> Enum.take(limit) |> Enum.map(fn {_normalized, name} -> name end)
 
     matches ++ closest(others, term, limit - length(matches))
+  end
+
+  # Every name ends in "icon", so a term found only in that suffix ("on", "c")
+  # says nothing about the name: the first match must start before the suffix.
+  # A term running into the suffix ("bracketicon") still matches.
+  defp contains?(normalized, term) do
+    case :binary.match(normalized, term) do
+      {start, _length} -> start < byte_size(stem(normalized))
+      :nomatch -> false
+    end
   end
 
   defp closest(_entries, _term, 0), do: []
