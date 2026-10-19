@@ -9,10 +9,26 @@ erlang = "29"
 description = "Install Hex, Rebar and the dependencies"
 run = ["mix local.hex --force", "mix local.rebar --force", "mix deps.get"]
 
-[tasks.precommit]
-description = "Check compilation, dependencies, formatting, Credo, Doctor, docs, Dialyzer, and tests"
+[tasks."precommit:lib"]
+description = "Check the library: compilation, dependencies, formatting, Credo, Doctor, docs, Dialyzer, and tests"
 run = "mix precommit"
+
+[tasks."precommit:demo"]
+description = "Check examples/demo: compilation, dependencies, formatting, and tests"
+dir = "{{config_root}}/examples/demo"
+run = ["mix deps.get", "mix precommit"]
+
+# In sequence: the library's `mix format` rewrites files that the demo compiles
+# as a path dependency.
+[tasks.precommit]
+description = "Run mix precommit in the library, then in examples/demo"
+run = ["mise run precommit:lib", "mise run precommit:demo"]
 
 [tasks.bench]
 description = "Measure the LiveView diff payload and the compile time with the free icons"
 run = ["elixir bench/diff.exs", "elixir bench/compile.exs"]
+
+[tasks.demo]
+description = "Start the demo app (free icons only) on http://localhost:4310"
+dir = "{{config_root}}/examples/demo"
+run = ["mix setup", "mix phx.server"]

@@ -6,7 +6,8 @@ updates within the 29 series through `mise upgrade erlang`. Update the Elixir
 pin explicitly when adopting a new release.
 
 Run `mise install`, then `mise run setup`. Before opening a PR, run
-`mise run precommit`, which executes `mix precommit`: compilation without
+`mise run precommit`, which executes `mix precommit` (and the demo app's, see
+below): compilation without
 warnings, unused lockfile entries, formatting, strict Credo, Doctor, docs
 without warnings, Dialyzer, and tests with the coverage floor. Mise tasks
 automatically use the configured tools. For individual commands, use
@@ -67,6 +68,22 @@ mise exec -- mix deps.get
 When raising the lowest supported LiveView, update the requirement in
 `mix.exs`, the job's `HUGEICONS_LIVE_VIEW_REQUIREMENT`, this section and the
 README.
+
+## Demo app
+
+`examples/demo` is a Phoenix app that depends on the library through
+`{:hugeicons, path: "../.."}`: a gallery of the free icons with live attribute
+controls, and examples of `show_alt`, an animated path and `<title>`. Start it
+with `mise run demo` and open [localhost:4310](http://localhost:4310).
+`mise run precommit` runs the library's `mix precommit` (`precommit:lib`) and
+the demo's (`precommit:demo`). The first demo build downloads the free icons
+from npm, so the demo checks need the network.
+
+The demo compiles only the free `stroke-rounded` style and removes
+`HUGEICONS_LICENSE_KEY` before compiling, so it never downloads Pro icons even
+when your key is set. It is not part of the Hex package (`package: [files: ...]`
+in `mix.exs`); never configure a Pro style in it, and never render, screenshot
+or deploy Pro icons with it.
 
 ## Icons and the license key
 

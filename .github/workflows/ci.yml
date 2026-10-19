@@ -77,10 +77,13 @@ jobs:
           if find "$RUNNER_TEMP/package" -name '*.etf' -o -name '*Icon.js' | grep -q .; then
             echo "The package must not contain icons"; exit 1
           fi
+          if [ -e "$RUNNER_TEMP/package/examples" ]; then
+            echo "The package must not contain examples/"; exit 1
+          fi
 
   # mix.exs allows phoenix_live_view "~> 1.1" while mix.lock pins a 1.2 release.
-  # This job narrows the requirement to the lowest supported minor (resolving its
-  # latest patch) and runs the suite against it. It is not a required check.
+  # This job narrows the requirement to the lowest supported release (1.1.0) and
+  # runs the suite against it. It is not a required check.
   lowest-live-view:
     name: Lowest LiveView
     runs-on: ubuntu-latest
@@ -118,3 +121,39 @@ jobs:
       # (Phoenix.LiveViewTest) emit Elixir 1.20 type warnings. The library itself
       # compiles without warnings above.
       - run: mix test
+
+  # Not a required check: it downloads the free icons from npm on a cold cache.
+  demo:
+    name: Demo checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MIX_ENV: test
+    defaults:
+      run:
+        working-directory: examples/demo
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
+      - name: Resolve BEAM cache version
+        id: beam
+        run: elixir -e 'IO.puts("version=#{System.version()}-#{:erlang.system_info(:version)}")' >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            examples/demo/deps
+            examples/demo/_build
+          key: ${{ runner.os }}-beam-${{ steps.beam.outputs.version }}-demo-${{ hashFiles('mise.toml', 'mix.lock', 'examples/demo/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-beam-${{ steps.beam.outputs.version }}-demo-
+      - name: Install Hex and Rebar
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+      - run: mix deps.get --check-locked
+      - run: mix format --check-formatted
+      - run: mix compile --warnings-as-errors
+      - run: mix deps.unlock --check-unused
+      - run: mix test --warnings-as-errors
