@@ -18,6 +18,27 @@ The library's own builds read the fixture icons in `test/fixtures/icons`
 (`config/config.exs`), so development and CI need neither the network nor a
 license key.
 
+## Benchmarks
+
+`mise run bench` reproduces the measurements of the design spec
+(`docs/superpowers/specs/2026-10-18-hugeicons-design.md`) with the real free
+icons, and prints Markdown tables to paste in a PR:
+
+- `bench/diff.exs`: the LiveView diff payload of a list of rows rendering the
+  same icon (initial render, unrelated assign change, `size` change), for the
+  shipped component and the rejected approaches kept as reference code.
+  Options: `--rows 50`, `--icon FirstBracketIcon`.
+- `bench/compile.exs`: the compile time of the chunk modules with a warm cache
+  and their `.beam` size, next to a map literal and a single module.
+  Option: `--rounds 3`.
+
+Run one script with `mise exec -- elixir bench/diff.exs --rows 20`. The scripts
+install this checkout with `Mix.install` (using `mix.lock`), download
+`@hugeicons/core-free-icons` from npm on the first run, outside the timed
+sections, and keep everything in `_build/bench`. They ignore
+`HUGEICONS_LICENSE_KEY`, so they never download Pro icons. Re-run them when
+LiveView, OTP or the design changes, and update the spec with the new numbers.
+
 ## Icons and the license key
 
 This repository never contains Hugeicons Pro icons, in any form: not as SVG,
