@@ -4,3 +4,7 @@
 # Optional: your Hugeicons Pro Universal License Key (hugeicons.com → Account →
 # Tokens). Without it only the free stroke-rounded icons are downloaded.
 HUGEICONS_LICENSE_KEY = ""
+# CI only: replaces the phoenix_live_view requirement in mix.exs to test the
+# lowest supported LiveView (see "Supported versions" in CONTRIBUTING.md). Leave
+# it unset here: with it, `mix deps.get` changes mix.lock.
+# HUGEICONS_LIVE_VIEW_REQUIREMENT = "~> 1.1.0"

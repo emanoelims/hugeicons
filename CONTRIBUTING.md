@@ -39,6 +39,35 @@ sections, and keep everything in `_build/bench`. They ignore
 `HUGEICONS_LICENSE_KEY`, so they never download Pro icons. Re-run them when
 LiveView, OTP or the design changes, and update the spec with the new numbers.
 
+## Supported versions
+
+The library supports Elixir `~> 1.20` and `phoenix_live_view` `~> 1.1`, as
+declared in `mix.exs`. The required `Elixir checks` job runs everything against
+the LiveView release locked in `mix.lock` (1.2). The `Lowest LiveView` job, not
+required, sets `HUGEICONS_LIVE_VIEW_REQUIREMENT="== 1.1.0"`, which `mix.exs`
+reads in place of its default requirement, unlocks `phoenix_live_view`, compiles
+the library with `--warnings-as-errors` and runs the tests against 1.1.0, the
+lowest supported release. The tests run without `--warnings-as-errors` there:
+LiveView 1.1.0 to 1.1.20 emit Elixir 1.20 type warnings from their own test
+helpers (`Phoenix.LiveViewTest`), which host applications never compile with
+that flag. To reproduce it locally, then go back to the locked version (never
+commit the changed `mix.lock`):
+
+```sh
+export HUGEICONS_LIVE_VIEW_REQUIREMENT="== 1.1.0" MIX_ENV=test
+mise exec -- mix deps.unlock phoenix_live_view
+mise exec -- mix deps.get
+mise exec -- mix compile --warnings-as-errors
+mise exec -- mix test
+unset HUGEICONS_LIVE_VIEW_REQUIREMENT MIX_ENV
+git checkout mix.lock
+mise exec -- mix deps.get
+```
+
+When raising the lowest supported LiveView, update the requirement in
+`mix.exs`, the job's `HUGEICONS_LIVE_VIEW_REQUIREMENT`, this section and the
+README.
+
 ## Icons and the license key
 
 This repository never contains Hugeicons Pro icons, in any form: not as SVG,
