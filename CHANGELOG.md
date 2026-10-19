@@ -14,3 +14,4 @@ following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Configured styles download in parallel, and compilation reports each download with its size and duration.
 - `Hugeicons.names/0` and `Hugeicons.variants/0` list what was compiled.
 - `config :hugeicons, version: "4.3.4"` pins the Hugeicons package version for reproducible builds. Unset, the registry's latest release is used as before. A version that is not published fails compilation with the most recent published versions, and changing the pin downloads the styles again. The free and Pro packages are versioned separately, so the pin follows the tier in use.
+- `mix hugeicons.search <term>` lists the compiled icon names containing the term, then the closest ones (so `favorite` also finds `FavouriteIcon`), one per line, ready to paste; `--limit` caps the list.
