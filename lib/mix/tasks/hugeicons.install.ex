@@ -7,8 +7,9 @@ defmodule Mix.Tasks.Hugeicons.Install do
       $ mix hugeicons.install
 
   Icons are downloaded on the first compilation anyway; run this task to pick up a
-  new Hugeicons release or after changing your plan. The modules that compiled the
-  icons track the cache files, so the next `mix compile` recompiles them.
+  new Hugeicons release or after changing your plan. It then recompiles the
+  `:hugeicons` dependency, so the new icons are compiled in: Mix only re-checks the
+  files of path dependencies, and a git or Hex dependency would keep the old ones.
 
   Each style is reported with the version it resolved to: the pinned `:version`
   when one is configured, or else the registry's latest release. Without a pin,
@@ -34,6 +35,16 @@ defmodule Mix.Tasks.Hugeicons.Install do
       Mix.shell().info("#{style}: #{map_size(set.icons)} icons (#{origin_label(set.origin)} #{set.version})")
     end
 
+    recompile(Mix.Project.config()[:app])
+  end
+
+  # In the library's own project the chunk modules track the cache files as
+  # @external_resource, so the next compilation picks them up.
+  defp recompile(:hugeicons), do: :ok
+
+  defp recompile(_host_app) do
+    Mix.shell().info("Recompiling the hugeicons dependency")
+    Mix.Task.run("deps.compile", ["hugeicons", "--force"])
     :ok
   end
 
