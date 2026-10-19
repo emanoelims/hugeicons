@@ -75,6 +75,11 @@ defmodule Hugeicons do
         <title>Close</title>
       </.hugeicons_icon>
 
+  An `aria-label` or `aria-labelledby` also names the icon and renders `role="img"`.
+  For a name that may be missing, prefer `aria-label={@label}`: a `nil` label leaves
+  the icon decorative, while any inner block exposes it, even one that renders
+  nothing (`<title :if={@label}>`).
+
   A `role` or `aria-hidden` you pass yourself always wins and is rendered once.
 
   ## Examples
@@ -106,8 +111,8 @@ defmodule Hugeicons do
   attr :rest, :global,
     include: ~w(fill stroke),
     doc: """
-    They go to the `<svg>`. Without an inner block, `aria-hidden="true"` is added; with one, \
-    `role="img"`. Your own `aria-hidden` and `role` take precedence.\
+    They go to the `<svg>`. With an inner block, `aria-label` or `aria-labelledby`, `role="img"` \
+    is added; otherwise `aria-hidden="true"`. Your own `aria-hidden` and `role` take precedence.\
     """
 
   slot :inner_block, doc: "markup placed first inside `<svg>`, such as a `<title>`."
@@ -163,14 +168,22 @@ defmodule Hugeicons do
   defp absolute_stroke_width(width, size) when is_number(width) and is_number(size) and size > 0, do: width * 24 / size
   defp absolute_stroke_width(width, _size), do: width
 
-  # A decorative icon is hidden from assistive technology; one with an inner block
-  # (a `<title>`) is exposed as an image. The caller's own values win.
-  defp global_attrs(rest, []), do: put_default(rest, :"aria-hidden", "true")
-  defp global_attrs(rest, _inner_block), do: put_default(rest, :role, "img")
-
-  defp put_default(rest, key, value) when is_map(rest) do
-    if Map.has_key?(rest, key) or Map.has_key?(rest, Atom.to_string(key)), do: rest, else: Map.put(rest, key, value)
+  # A decorative icon is hidden from assistive technology; one with an accessible
+  # name (an inner block such as a `<title>`, or `aria-label`/`aria-labelledby`) is
+  # exposed as an image. The caller's own values win.
+  defp global_attrs(rest, inner_block) when is_map(rest) do
+    if inner_block != [] or named?(rest),
+      do: put_default(rest, :role, "img"),
+      else: put_default(rest, :"aria-hidden", "true")
   end
+
+  defp named?(rest), do: Enum.any?([:"aria-label", :"aria-labelledby"], &(global(rest, &1) not in [nil, false, ""]))
+
+  # A nil value renders nothing, so it counts as not given and the default applies.
+  defp put_default(rest, key, value), do: if(global(rest, key) == nil, do: Map.put(rest, key, value), else: rest)
+
+  # Callers' globals have atom keys; an explicit `rest` map may use strings.
+  defp global(rest, key), do: Map.get(rest, key, Map.get(rest, Atom.to_string(key)))
 
   defp inner!(true, _icon, _variant, alt_icon, alt_variant) when is_binary(alt_icon), do: lookup!(alt_icon, alt_variant)
   defp inner!(_show_alt, icon, variant, _alt_icon, _alt_variant), do: lookup!(icon, variant)

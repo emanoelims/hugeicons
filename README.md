@@ -145,21 +145,6 @@ unset to always follow the latest release, for example while trying the library.
 Global attributes (`class`, `id`, `aria-*`, `data-*`, `phx-*`, `fill`, `stroke`, …)
 go to the `<svg>`.
 
-### Accessibility
-
-An icon without an inner block is decorative and renders `aria-hidden="true"`.
-To give one an accessible name, pass a `<title>`: the icon then renders
-`role="img"` and no `aria-hidden`, so screen readers announce it.
-
-```heex
-<.hugeicons_icon icon="Cancel01Icon">
-  <title>Close</title>
-</.hugeicons_icon>
-```
-
-A `role` or `aria-hidden` you pass yourself always wins. Inside a button or link
-that already has a text label, leave the icon decorative.
-
 A literal icon name that does not exist warns at compile time. A name computed at
 runtime (`icon={@item.icon}`) raises with a suggestion when it does not exist; use
 `Hugeicons.names/0` to validate names that come from data.
@@ -180,6 +165,26 @@ ThirdBracketIcon
 
 Case, spaces, hyphens and underscores are ignored; `--limit` (default 20) caps
 the list.
+
+### Accessibility
+
+An icon without an inner block is decorative and renders `aria-hidden="true"`.
+To give one an accessible name, pass a `<title>`: the icon then renders
+`role="img"` and no `aria-hidden`, so screen readers announce it.
+
+```heex
+<.hugeicons_icon icon="Cancel01Icon">
+  <title>Close</title>
+</.hugeicons_icon>
+```
+
+An `aria-label` or `aria-labelledby` also names the icon and renders `role="img"`.
+For a name that may be missing, prefer `aria-label={@label}`: a `nil` label leaves
+the icon decorative, while any inner block exposes it, even one that renders
+nothing (`<title :if={@label}>`).
+
+A `role` or `aria-hidden` you pass yourself always wins. Inside a button or link
+that already has a text label, leave the icon decorative.
 
 ## How it works
 

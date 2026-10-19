@@ -107,7 +107,7 @@ defmodule HugeiconsTest do
     test "the caller's aria-hidden and role win and are rendered once" do
       assigns = %{hidden: "false"}
 
-      shown = rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-hidden={@hidden} aria-label="Home" />|)
+      shown = rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-hidden={@hidden} />|)
       assert occurrences(shown, "aria-hidden") == 1
       assert {attr_of(svg(shown), "aria-hidden"), attr_of(svg(shown), "role")} == {"false", nil}
 
@@ -118,6 +118,29 @@ defmodule HugeiconsTest do
       assert occurrences(titled, "role") == 1
       assert occurrences(titled, "aria-hidden") == 1
       assert {attr_of(svg(titled), "role"), attr_of(svg(titled), "aria-hidden")} == {"graphics-symbol", "true"}
+    end
+
+    test "an aria-label or aria-labelledby exposes the icon as an image" do
+      assigns = %{}
+
+      for html <- [
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-label="Home" />|),
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-labelledby="home-label" />|)
+          ] do
+        assert attr_of(svg(html), "role") == "img"
+        refute html =~ "aria-hidden"
+      end
+    end
+
+    test "a nil label or aria-hidden leaves the icon decorative" do
+      assigns = %{label: nil}
+
+      for html <- [
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-label={@label} />|),
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-hidden={@label} />|)
+          ] do
+        assert {attr_of(svg(html), "aria-hidden"), attr_of(svg(html), "role")} == {"true", nil}
+      end
     end
 
     test "an explicit rest map is honored, whatever its key type" do
