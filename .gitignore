@@ -29,3 +29,6 @@ hugeicons-*.tar
 mise.local.toml
 .env
 .env.*
+
+# Claude Code agent worktrees (workflows with worktree isolation).
+/.claude/worktrees/
