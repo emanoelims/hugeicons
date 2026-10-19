@@ -96,6 +96,34 @@ RUN --mount=type=secret,id=hugeicons,env=HUGEICONS_LICENSE_KEY \
     mix compile
 ```
 
+## Pinning the version
+
+Without a pin, each style downloads the registry's `latest` release the first time
+a build directory compiles it. Two machines, or CI and a laptop, can then compile
+different Hugeicons versions, and a new release can add, rename or remove icons
+without any change in your repository. Pin the version for reproducible builds:
+
+```elixir
+# config/config.exs
+config :hugeicons, version: "4.3.4"
+```
+
+Every configured style then downloads exactly that version, and compilation fails
+with the most recent published versions when it does not exist. Changing the pin
+downloads the styles again on the next `mix compile`. Without a pin, the cached
+styles stay as they are until `mix hugeicons.install`, which prints the version
+each style resolved to, so running it once is a way to find the version to pin.
+
+The free and Pro packages are versioned separately (on 2026-10-18 the latest free
+release was 4.3.5 and the latest Pro release 4.3.4), and the pin applies to the
+tier in use: with `HUGEICONS_LICENSE_KEY` every style comes from the Pro registry,
+so pin a Pro version; without it, pin a free version. Adding or removing the key
+usually needs a new pin too.
+
+Pin the version in applications that are built in CI, deployed, or developed by
+more than one person, and bump it deliberately to adopt a new release. Leave it
+unset to always follow the latest release, for example while trying the library.
+
 ## Usage
 
 | Attribute | Default | |

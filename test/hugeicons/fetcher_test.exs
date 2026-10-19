@@ -39,6 +39,53 @@ defmodule Hugeicons.FetcherTest do
     assert {"authorization", "Bearer key-123"} in tarball_headers
   end
 
+  test "without a pinned version, downloads the latest dist-tag", %{tmp_dir: tmp} do
+    tarball = RegistryStub.tarball(%{"FirstBracketIcon" => @icon}, tmp)
+    RegistryStub.stub(@npm, "@hugeicons/core-free-icons", tarball, versions: ~w(4.3.4 4.3.5 5.0.0-rc.1), latest: "4.3.5")
+
+    assert %{version: "4.3.5"} = Fetcher.fetch!("stroke-rounded", config(), @req)
+    assert_received {:request, "GET", @npm <> "/@hugeicons/core-free-icons/-/package-4.3.5.tgz", _headers}
+  end
+
+  test "downloads the pinned version instead of the latest", %{tmp_dir: tmp} do
+    tarball = RegistryStub.tarball(%{"FirstBracketIcon" => @icon}, tmp)
+    RegistryStub.stub(@pro, "@hugeicons-pro/core-solid-sharp", tarball, versions: ~w(4.3.3 4.3.4 4.3.5))
+
+    assert %{version: "4.3.4", origin: :pro} =
+             Fetcher.fetch!("solid-sharp", %{config("key-123") | version: "4.3.4"}, @req)
+
+    assert_received {:mix_shell, :info, ["hugeicons: downloading @hugeicons-pro/core-solid-sharp 4.3.4"]}
+    assert_received {:request, "GET", @pro <> "/@hugeicons-pro/core-solid-sharp/-/package-4.3.4.tgz", _headers}
+    refute_received {:request, "GET", @pro <> "/@hugeicons-pro/core-solid-sharp/-/package-4.3.5.tgz", _headers}
+  end
+
+  test "an unpublished pinned version lists the most recent ones without the key", %{tmp_dir: tmp} do
+    tarball = RegistryStub.tarball(%{"FirstBracketIcon" => @icon}, tmp)
+    versions = ~w(4.2.0 4.3.0 4.9.0 4.10.0 4.3.4 4.3.5 not-semver)
+    RegistryStub.stub(@pro, "@hugeicons-pro/core-solid-sharp", tarball, versions: versions, latest: "4.10.0")
+
+    error =
+      assert_raise Error, fn -> Fetcher.fetch!("solid-sharp", %{config("key-123") | version: "4.3.9"}, @req) end
+
+    assert error.message =~
+             "@hugeicons-pro/core-solid-sharp 4.3.9 is not published (the most recent are 4.10.0, 4.9.0, 4.3.5, 4.3.4, 4.3.0)"
+
+    assert error.message =~ "set config :hugeicons, :version"
+    assert error.message =~ "The free and Pro packages have different version numbers"
+    refute error.message =~ "key-123"
+    refute_received {:request, "GET", "https://npm.hugeicons.com/@hugeicons-pro/core-solid-sharp/-/" <> _, _headers}
+  end
+
+  test "a pinned version on a package without versions says so", %{tmp_dir: tmp} do
+    RegistryStub.stub(@npm, "@hugeicons/core-free-icons", RegistryStub.tarball(%{}, tmp), versions: [], latest: nil)
+
+    assert_raise Error, ~r/4\.3\.5 is not published \(the registry lists no versions\)/, fn ->
+      Fetcher.fetch!("stroke-rounded", %{config() | version: "4.3.5"}, @req)
+    end
+
+    assert_raise Error, ~r/has no published version/, fn -> Fetcher.fetch!("stroke-rounded", config(), @req) end
+  end
+
   test "a Pro style without a license key fails before any request" do
     assert_raise Error, ~r/solid-sharp is a Hugeicons Pro style: set HUGEICONS_LICENSE_KEY/, fn ->
       Fetcher.fetch!("solid-sharp", config(), @req)

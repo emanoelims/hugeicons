@@ -10,6 +10,10 @@ defmodule Mix.Tasks.Hugeicons.Install do
   new Hugeicons release or after changing your plan. The modules that compiled the
   icons track the cache files, so the next `mix compile` recompiles them.
 
+  Each style is reported with the version it resolved to: the pinned `:version`
+  when one is configured, or else the registry's latest release. Without a pin,
+  that is the version to set to keep builds reproducible.
+
   Pro styles need `HUGEICONS_LICENSE_KEY` in the environment, for example through
   `mise.local.toml`.
   """
