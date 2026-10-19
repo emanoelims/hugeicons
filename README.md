@@ -143,14 +143,7 @@ unset to always follow the latest release, for example while trying the library.
 | `absolute_stroke_width` | `false` | Keeps the stroke width constant on screen whatever the size |
 
 Global attributes (`class`, `id`, `aria-*`, `data-*`, `phx-*`, `fill`, `stroke`, …)
-go to the `<svg>`. Icons are `aria-hidden` by default; to give one an accessible
-name:
-
-```heex
-<.hugeicons_icon icon="Cancel01Icon" aria-hidden="false" role="img">
-  <title>Close</title>
-</.hugeicons_icon>
-```
+go to the `<svg>`.
 
 A literal icon name that does not exist warns at compile time. A name computed at
 runtime (`icon={@item.icon}`) raises with a suggestion when it does not exist; use
@@ -172,6 +165,26 @@ ThirdBracketIcon
 
 Case, spaces, hyphens and underscores are ignored; `--limit` (default 20) caps
 the list.
+
+### Accessibility
+
+An icon without an inner block is decorative and renders `aria-hidden="true"`.
+To give one an accessible name, pass a `<title>`: the icon then renders
+`role="img"` and no `aria-hidden`, so screen readers announce it.
+
+```heex
+<.hugeicons_icon icon="Cancel01Icon">
+  <title>Close</title>
+</.hugeicons_icon>
+```
+
+An `aria-label` or `aria-labelledby` also names the icon and renders `role="img"`.
+For a name that may be missing, prefer `aria-label={@label}`: a `nil` label leaves
+the icon decorative, while any inner block exposes it, even one that renders
+nothing (`<title :if={@label}>`).
+
+A `role` or `aria-hidden` you pass yourself always wins. Inside a button or link
+that already has a text label, leave the icon decorative.
 
 ## How it works
 

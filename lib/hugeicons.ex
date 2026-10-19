@@ -65,12 +65,22 @@ defmodule Hugeicons do
   `"FirstBracketIcon"`. A literal name that was not compiled produces a warning at
   compile time; a name computed at runtime raises `ArgumentError` with a suggestion.
 
-  Pass a `<title>` as the inner block to give the icon an accessible name, together
-  with `aria-hidden="false"` and `role="img"`:
+  ## Accessibility
 
-      <.hugeicons_icon icon="Cancel01Icon" aria-hidden="false" role="img">
+  An icon without an inner block is decorative: it renders `aria-hidden="true"`.
+  Pass a `<title>` as the inner block to give it an accessible name; the icon then
+  renders `role="img"` and no `aria-hidden`, so assistive technology announces it:
+
+      <.hugeicons_icon icon="Cancel01Icon">
         <title>Close</title>
       </.hugeicons_icon>
+
+  An `aria-label` or `aria-labelledby` also names the icon and renders `role="img"`.
+  For a name that may be missing, prefer `aria-label={@label}`: a `nil` label leaves
+  the icon decorative, while any inner block exposes it, even one that renders
+  nothing (`<title :if={@label}>`).
+
+  A `role` or `aria-hidden` you pass yourself always wins and is rendered once.
 
   ## Examples
 
@@ -98,16 +108,34 @@ defmodule Hugeicons do
     default: false,
     doc: "keeps the stroke width constant on screen whatever the `size`."
 
-  attr :rest, :global, default: %{"aria-hidden" => "true"}, include: ~w(fill stroke)
+  attr :rest, :global,
+    include: ~w(fill stroke),
+    doc: """
+    They go to the `<svg>`. With an inner block, `aria-label` or `aria-labelledby`, `role="img"` \
+    is added; otherwise `aria-hidden="true"`. Your own `aria-hidden` and `role` take precedence.\
+    """
+
   slot :inner_block, doc: "markup placed first inside `<svg>`, such as a `<title>`."
 
   @spec hugeicons_icon(map()) :: Phoenix.LiveView.Rendered.t()
   def hugeicons_icon(assigns) do
     # Without an explicit alt_variant, the alternative icon uses the same style.
-    assigns = assign_new(assigns, :alt_variant, fn %{variant: variant} -> variant end)
+    assigns
+    |> assign_new(:alt_variant, fn %{variant: variant} -> variant end)
+    |> svg()
+  end
 
-    # Lookups stay inside template expressions so HEEx re-runs them only when their
-    # inputs change; a derived assign would resend the paths on every render.
+  # Lookups stay inside template expressions so HEEx re-runs them only when their
+  # inputs change; a derived assign would resend the paths on every render.
+  #
+  # HEEx resends an expression when any assign it references changes, whatever the
+  # branch taken, so `stroke-width` reads `@size` only in the template for absolute
+  # widths: with relative widths, changing `size` does not resend it.
+  #
+  # The global attributes and the accessibility defaults share one expression: the
+  # caller's globals exist only in `@rest`, and a separate `aria-hidden={...}` or
+  # `role={...}` would render twice whenever the caller also passes it.
+  defp svg(%{absolute_stroke_width: true} = assigns) do
     ~H"""
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -116,14 +144,46 @@ defmodule Hugeicons do
       height={@size}
       fill="none"
       color={@color}
-      stroke-width={stroke_width(@stroke_width, @absolute_stroke_width, @size)}
-      {@rest}
+      stroke-width={absolute_stroke_width(@stroke_width, @size)}
+      {global_attrs(@rest, @inner_block)}
     >{render_slot(@inner_block)}{inner!(@show_alt, @icon, @variant, @alt_icon, @alt_variant)}</svg>
     """
   end
 
-  defp stroke_width(width, true, size) when is_number(width) and is_number(size) and size > 0, do: width * 24 / size
-  defp stroke_width(width, _absolute, _size), do: width
+  defp svg(assigns) do
+    ~H"""
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={@size}
+      height={@size}
+      fill="none"
+      color={@color}
+      stroke-width={@stroke_width}
+      {global_attrs(@rest, @inner_block)}
+    >{render_slot(@inner_block)}{inner!(@show_alt, @icon, @variant, @alt_icon, @alt_variant)}</svg>
+    """
+  end
+
+  defp absolute_stroke_width(width, size) when is_number(width) and is_number(size) and size > 0, do: width * 24 / size
+  defp absolute_stroke_width(width, _size), do: width
+
+  # A decorative icon is hidden from assistive technology; one with an accessible
+  # name (an inner block such as a `<title>`, or `aria-label`/`aria-labelledby`) is
+  # exposed as an image. The caller's own values win.
+  defp global_attrs(rest, inner_block) when is_map(rest) do
+    if inner_block != [] or named?(rest),
+      do: put_default(rest, :role, "img"),
+      else: put_default(rest, :"aria-hidden", "true")
+  end
+
+  defp named?(rest), do: Enum.any?([:"aria-label", :"aria-labelledby"], &(global(rest, &1) not in [nil, false, ""]))
+
+  # A nil value renders nothing, so it counts as not given and the default applies.
+  defp put_default(rest, key, value), do: if(global(rest, key) == nil, do: Map.put(rest, key, value), else: rest)
+
+  # Callers' globals have atom keys; an explicit `rest` map may use strings.
+  defp global(rest, key), do: Map.get(rest, key, Map.get(rest, Atom.to_string(key)))
 
   defp inner!(true, _icon, _variant, alt_icon, alt_variant) when is_binary(alt_icon), do: lookup!(alt_icon, alt_variant)
   defp inner!(_show_alt, icon, variant, _alt_icon, _alt_variant), do: lookup!(icon, variant)
