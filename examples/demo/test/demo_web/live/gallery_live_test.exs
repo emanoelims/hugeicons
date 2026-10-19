@@ -117,13 +117,31 @@ defmodule DemoWeb.GalleryLiveTest do
 
   test "toggles the alternate icon", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/")
+    update(view, %{query: "ViewOffSlashIcon"})
 
     assert has_element?(view, ~s(#password[type="password"]))
     assert has_element?(view, ~s(#reveal[aria-label="Show password"]))
+    icon = shapes(view, "#reveal svg")
 
     view |> element("#reveal") |> render_click()
 
     assert has_element?(view, ~s(#password[type="text"]))
     assert has_element?(view, ~s(#reveal[aria-label="Hide password"]))
+    assert shapes(view, "#reveal svg") == shapes(view, "#icon-ViewOffSlashIcon svg")
+    refute shapes(view, "#reveal svg") == icon
+
+    view |> element("#reveal") |> render_click()
+
+    assert shapes(view, "#reveal svg") == icon
+  end
+
+  # The markup inside an icon's <svg>, without the wrapper's attributes.
+  defp shapes(view, selector) do
+    view
+    |> element(selector)
+    |> render()
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query("svg > *")
+    |> LazyHTML.to_html()
   end
 end
