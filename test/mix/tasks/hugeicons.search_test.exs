@@ -25,6 +25,10 @@ defmodule Mix.Tasks.Hugeicons.SearchTest do
     end
   end
 
+  test "compiles the project before searching the compiled names" do
+    assert Mix.Task.requirements(Search) == ["compile"]
+  end
+
   test "prints the names containing the term, ignoring case" do
     assert search(["BRACKET"]) == ["FirstBracketIcon"]
   end
