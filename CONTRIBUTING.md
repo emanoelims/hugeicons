@@ -88,8 +88,8 @@ with a stability commitment will be `1.0.0`.
 
 The public API is the `hugeicons_icon/1` component and its attributes, the
 `config :hugeicons` options, `Hugeicons.names/0`, `Hugeicons.variants/0`,
-`mix hugeicons.install`, and the documented modules. `Hugeicons.Chunks.*` are
-generated internals.
+`mix hugeicons.install`, `mix hugeicons.search`, and the documented modules.
+`Hugeicons.Chunks.*` are generated internals.
 
 ## Changelog
 

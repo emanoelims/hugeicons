@@ -152,6 +152,23 @@ A literal icon name that does not exist warns at compile time. A name computed a
 runtime (`icon={@item.icon}`) raises with a suggestion when it does not exist; use
 `Hugeicons.names/0` to validate names that come from data.
 
+Icon names are strings, which editors do not autocomplete. To find one from the
+terminal, run `mix hugeicons.search`: it compiles your project and lists the
+compiled names that contain a term, then the closest ones, so a typo or another
+spelling still finds the icon:
+
+```console
+$ mix hugeicons.search first bracket
+FirstBracketCircleIcon
+FirstBracketIcon
+FirstBracketSquareIcon
+RootFirstBracketIcon
+ThirdBracketIcon
+```
+
+Case, spaces, hyphens and underscores are ignored; `--limit` (default 20) caps
+the list.
+
 ## How it works
 
 At compile time the library downloads each style's npm package, checks it against
