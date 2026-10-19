@@ -38,6 +38,28 @@ defmodule Hugeicons.ConfigTest do
     assert_raise ArgumentError, ~r/:source/, fn -> Config.new!(source: "test/fixtures") end
   end
 
+  test "accepts an exact version to pin, and defaults to none" do
+    assert Config.new!([]).version == nil
+    assert Config.new!(version: "4.3.4").version == "4.3.4"
+    assert Config.new!(version: "5.0.0-rc.1").version == "5.0.0-rc.1"
+  end
+
+  test "rejects a version that is not exact" do
+    for version <- ["4.3", "latest", "^4.3.4", "v4.3.4", 4.3, :latest] do
+      assert_raise ArgumentError, ~r/expected :version to be an exact package version/, fn ->
+        Config.new!(version: version)
+      end
+    end
+  end
+
+  test "compile_env reads the pinned version" do
+    Application.put_env(:hugeicons, :version, "4.3.4")
+    on_exit(fn -> Application.delete_env(:hugeicons, :version) end)
+
+    {config, _binding} = Code.eval_string("require Hugeicons.Config; Hugeicons.Config.compile_env()")
+    assert config.version == "4.3.4"
+  end
+
   test "reads the license key from the environment and never shows it" do
     System.put_env("HUGEICONS_LICENSE_KEY", " secret-key \n")
     config = Config.new!([])

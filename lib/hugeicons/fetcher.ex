@@ -2,6 +2,9 @@ defmodule Hugeicons.Fetcher do
   @moduledoc """
   Downloads a style's npm package and converts its icons.
 
+  The version downloaded is the configured `:version` when one is pinned, or else the
+  registry's `latest` dist-tag.
+
   The free style comes from the public npm registry. With a license key, every
   style (the free one included) comes from Hugeicons' private registry, which
   authenticates with the key as a bearer token, as `.npmrc` does.
@@ -57,11 +60,11 @@ defmodule Hugeicons.Fetcher do
   def fetch!(style, %Config{} = config, req_options \\ []) do
     case origin(style, config) do
       {:path, dir} = origin -> %{version: "path", origin: origin, icons: read_dir!(dir, style)}
-      tier -> download!(style, tier, config.license_key, req_options)
+      tier -> download!(style, tier, config, req_options)
     end
   end
 
-  defp download!(style, tier, key, req_options) do
+  defp download!(style, tier, %Config{license_key: key, version: pinned}, req_options) do
     # Downloads run at compile time, before any application is started.
     {:ok, _apps} = Application.ensure_all_started(:req)
     registry = registry(tier)
@@ -77,8 +80,8 @@ defmodule Hugeicons.Fetcher do
       |> get!("/" <> String.replace(package, "/", "%2F"), package, headers: [accept: @abbreviated_metadata])
       |> decode_metadata!(package)
 
-    version = get_in(metadata, ["dist-tags", "latest"])
-    dist = get_in(metadata, ["versions", version, "dist"]) || raise Error, "#{package} has no published version"
+    version = pinned || get_in(metadata, ["dist-tags", "latest"])
+    dist = dist!(metadata, version, pinned, package)
     tarball_url = same_host!(dist["tarball"], registry, package)
 
     info("downloading #{package} #{version}")
@@ -129,6 +132,44 @@ defmodule Hugeicons.Fetcher do
       _ -> raise Error, "the registry returned invalid metadata for #{package}"
     end
   end
+
+  # A pinned version that is missing is a configuration mistake: list what exists.
+  defp dist!(metadata, version, pinned, package) do
+    case metadata do
+      %{"versions" => %{^version => %{"dist" => %{} = dist}}} -> dist
+      _other when is_binary(pinned) -> raise Error, unpublished_message(package, pinned, metadata)
+      _other -> raise Error, "#{package} has no published version"
+    end
+  end
+
+  @recent_versions 5
+
+  defp unpublished_message(package, pinned, metadata) do
+    available =
+      case recent_versions(metadata) do
+        [] -> "the registry lists no versions"
+        versions -> "the most recent are " <> Enum.join(versions, ", ")
+      end
+
+    "#{package} #{pinned} is not published (#{available}): set config :hugeicons, :version to a " <>
+      "published version, or remove it to use the latest. The free and Pro packages have different version numbers"
+  end
+
+  defp recent_versions(%{"versions" => %{} = versions}) do
+    versions
+    |> Map.keys()
+    |> Enum.flat_map(fn version ->
+      case Version.parse(version) do
+        {:ok, parsed} -> [parsed]
+        :error -> []
+      end
+    end)
+    |> Enum.sort({:desc, Version})
+    |> Enum.take(@recent_versions)
+    |> Enum.map(&to_string/1)
+  end
+
+  defp recent_versions(_metadata), do: []
 
   # The bearer token follows the tarball request, so it may only go to the registry itself.
   defp same_host!(url, registry, package) when is_binary(url) do

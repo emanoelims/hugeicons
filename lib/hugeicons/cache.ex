@@ -4,8 +4,10 @@ defmodule Hugeicons.Cache do
 
   Styles are stored one per file (`_build/hugeicons/<style>.etf` by default), so
   adding a style downloads only that one. A cached style is reused while it came
-  from the expected origin: setting or removing the license key switches between
-  the free and the Pro packages and downloads again.
+  from the expected origin and, when `:version` is pinned, has that version:
+  setting or removing the license key switches between the free and the Pro
+  packages, and changing the pin, downloads again. Without a pin the cached
+  version is kept until `mix hugeicons.install`.
 
   This module runs only at compile time (it uses `Mix`). Many modules compile in
   parallel and ask for the same style at once, so the download is serialized with
@@ -69,9 +71,9 @@ defmodule Hugeicons.Cache do
     end
   end
 
-  defp current_or_fetch!(path, origin, style, config, req_options) do
+  defp current_or_fetch!(path, origin, style, %Config{version: pinned} = config, req_options) do
     case read(path) do
-      {:ok, %{origin: ^origin} = set} -> set
+      {:ok, %{origin: ^origin, version: version} = set} when pinned in [nil, version] -> set
       _stale_or_missing -> write!(path, Fetcher.fetch!(style, config, req_options))
     end
   end

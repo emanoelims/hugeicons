@@ -51,6 +51,23 @@ defmodule Hugeicons.CacheTest do
     assert downloads() == 2
   end
 
+  test "reuses a cached style while its version matches the pin, and downloads again when the pin changes",
+       %{config: config, tarball: tarball} do
+    RegistryStub.stub(@npm, "@hugeicons/core-free-icons", tarball, versions: ~w(4.3.4 4.3.5))
+
+    assert %{version: "4.3.5"} = Cache.ensure!(config, "stroke-rounded", @req)
+    assert %{version: "4.3.5"} = Cache.ensure!(%{config | version: "4.3.5"}, "stroke-rounded", @req)
+    assert downloads() == 1
+
+    assert %{version: "4.3.4"} = Cache.ensure!(%{config | version: "4.3.4"}, "stroke-rounded", @req)
+    assert %{version: "4.3.4"} = Cache.ensure!(%{config | version: "4.3.4"}, "stroke-rounded", @req)
+    assert downloads() == 1
+
+    # Removing the pin keeps the cached version, as before pinning existed.
+    assert %{version: "4.3.4"} = Cache.ensure!(config, "stroke-rounded", @req)
+    assert downloads() == 0
+  end
+
   test "replaces a corrupt cache file", %{config: config} do
     path = Cache.path(config, "stroke-rounded")
     File.mkdir_p!(Path.dirname(path))
