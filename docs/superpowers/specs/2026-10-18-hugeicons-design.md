@@ -91,7 +91,21 @@ All on Elixir 1.20.4 / OTP 29, phoenix_live_view 1.2.12, 10 cores, the
 
 A resends everything because `assign/3` inside a function component marks a key
 absent from the incoming assigns as changed every time (`force_assign`). C and D
-share the paths as statics across list items.
+share the paths as statics across list items. These first numbers came from
+throwaway scripts with a smaller wrapper; the reproducible ones are below.
+
+Reproducible with `mise run bench` (`bench/diff.exs`, #4), on 2026-10-19 with the
+shipped component (after #20: accessibility defaults, two wrapper templates so a
+relative `stroke-width` does not depend on `size`):
+
+| Approach | Initial | Unrelated assign changes | `size` changes |
+|---|---|---|---|
+| A: `assign(:svg, lookup)` + `raw(@svg)` | 24,252 B | 9 B | 21,511 B |
+| B: lookup inside the template expression | 24,252 B | 9 B | 5,511 B |
+| Shipped: one wrapper + static-only `~H` per icon | 9,892 B | 9 B | 4,111 B |
+
+A `size` change still resends width, height and the global attributes of every
+row; the globals part needs a LiveView change (#8).
 
 ### Compile time (one style)
 
@@ -106,6 +120,15 @@ share the paths as statics across list items.
 
 One function per icon (no HEEx) compiled in 6.0 s / 8.2 MB; the chunk ebin is
 9.2 MB per style. Lookup: ~1.6 µs.
+
+Reproducible with `mise run bench` (`bench/compile.exs`), median of 3 runs on
+2026-10-19:
+
+| Variant | Time | ebin |
+|---|---|---|
+| 16 chunk modules in parallel (shipped) | 2.15 s | 8.9 MB |
+| Map literal (reference) | 1.34 s | 7.0 MB |
+| One module (reference) | 21.46 s | 8.9 MB |
 
 ### Pro styles (verified with a real key, #2)
 
@@ -159,15 +182,19 @@ tuning looked promising in 3 rounds but was not adopted without more evidence.
 all render paths as a dynamic `{:safe, ...}` string (approach A); heroicons also
 assigns all four styles' paths on every call.
 
-## Deferred (GitHub issues)
+## Follow-ups
 
-- #1 licensing and naming confirmation before Hex
-- #2 Pro format verification with a real key
-- #3 version pinning for reproducible builds
-- #4 benchmark scripts in the repository
-- #5 demo app with a free-icon gallery
-- #6 compiling only the icons a project uses
-- #8 global attributes resent on every re-render (needs a LiveView change)
-- #9 clearer compile-time feedback for unknown names
-- #10 supported Elixir/LiveView range and CI matrix
-- #12 rulesets and repository settings
+Done after the first cut: Pro format verified for all 9 styles (#2), version
+pinning (#3), benchmark scripts (#4), demo app (#5), accessibility through
+`label` (#7, #22), leaner `size` diffs (#8, partly), `mix hugeicons.search` (#9,
+partly), CI against LiveView 1.1.0 (#10), `fill` no longer accepted (#19),
+`mix hugeicons.install` recompiling git and Hex dependencies (#23).
+
+Open:
+
+- #1 licensing and naming confirmation with Hugeicons before Hex
+- #6 compiling only the icons a project uses (design:
+  `2026-10-18-compile-used-icons-design.md`, questions for the maintainer)
+- #8 global attributes resent on every re-render (needs a LiveView change; an
+  upstream issue is drafted in the issue)
+- #9 shorter `values:` warnings and docs (an upstream proposal is drafted in #17)
