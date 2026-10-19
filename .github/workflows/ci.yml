@@ -87,7 +87,7 @@ jobs:
     timeout-minutes: 15
     env:
       MIX_ENV: test
-      HUGEICONS_LIVE_VIEW_REQUIREMENT: '~> 1.1.0'
+      HUGEICONS_LIVE_VIEW_REQUIREMENT: '== 1.1.0'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -114,4 +114,7 @@ jobs:
           mix deps.get
           grep -o '"phoenix_live_view": {:hex, :phoenix_live_view, "[^"]*"' mix.lock
       - run: mix compile --warnings-as-errors
-      - run: mix test --warnings-as-errors
+      # Without --warnings-as-errors: LiveView 1.1.0-1.1.20's own test helpers
+      # (Phoenix.LiveViewTest) emit Elixir 1.20 type warnings. The library itself
+      # compiles without warnings above.
+      - run: mix test

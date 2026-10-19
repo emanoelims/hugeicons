@@ -41,8 +41,8 @@ defmodule Hugeicons.MixProject do
   defp deps do
     [
       # The supported LiveView range. CI's `Lowest LiveView` job narrows it with
-      # HUGEICONS_LIVE_VIEW_REQUIREMENT="~> 1.1.0" to run the suite against the
-      # lowest supported minor. This file ships in the Hex package and host builds
+      # HUGEICONS_LIVE_VIEW_REQUIREMENT="== 1.1.0" to run the suite against the
+      # lowest supported release. This file ships in the Hex package and host builds
       # evaluate it, hence the namespaced variable; never set it when publishing.
       {:phoenix_live_view, System.get_env("HUGEICONS_LIVE_VIEW_REQUIREMENT", "~> 1.1")},
       {:req, "~> 0.5 or ~> 0.6 or ~> 0.7"},

@@ -44,17 +44,21 @@ LiveView, OTP or the design changes, and update the spec with the new numbers.
 The library supports Elixir `~> 1.20` and `phoenix_live_view` `~> 1.1`, as
 declared in `mix.exs`. The required `Elixir checks` job runs everything against
 the LiveView release locked in `mix.lock` (1.2). The `Lowest LiveView` job, not
-required, sets `HUGEICONS_LIVE_VIEW_REQUIREMENT="~> 1.1.0"`, which `mix.exs`
-reads in place of its default requirement, unlocks `phoenix_live_view` and runs
-the compiler and the tests against the latest 1.1 release. To reproduce it
-locally, then go back to the locked version (never commit the changed
-`mix.lock`):
+required, sets `HUGEICONS_LIVE_VIEW_REQUIREMENT="== 1.1.0"`, which `mix.exs`
+reads in place of its default requirement, unlocks `phoenix_live_view`, compiles
+the library with `--warnings-as-errors` and runs the tests against 1.1.0, the
+lowest supported release. The tests run without `--warnings-as-errors` there:
+LiveView 1.1.0 to 1.1.20 emit Elixir 1.20 type warnings from their own test
+helpers (`Phoenix.LiveViewTest`), which host applications never compile with
+that flag. To reproduce it locally, then go back to the locked version (never
+commit the changed `mix.lock`):
 
 ```sh
-export HUGEICONS_LIVE_VIEW_REQUIREMENT="~> 1.1.0" MIX_ENV=test
+export HUGEICONS_LIVE_VIEW_REQUIREMENT="== 1.1.0" MIX_ENV=test
 mise exec -- mix deps.unlock phoenix_live_view
 mise exec -- mix deps.get
-mise exec -- mix test --warnings-as-errors
+mise exec -- mix compile --warnings-as-errors
+mise exec -- mix test
 unset HUGEICONS_LIVE_VIEW_REQUIREMENT MIX_ENV
 git checkout mix.lock
 mise exec -- mix deps.get
