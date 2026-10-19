@@ -8,7 +8,7 @@ package.
   applies `size`, `stroke_width`, `color` and `absolute_stroke_width` live. Click
   an icon to copy its component call.
 - **Examples**: `show_alt`, a path animated with CSS `stroke-dashoffset`, and an
-  accessible name with `<title>`.
+  accessible name with `label`.
 
 ## Running it
 

@@ -31,7 +31,7 @@ defmodule DemoWeb.GalleryLiveTest do
     assert has_element?(view, "#more")
     assert has_element?(view, ~s(#icon-#{first}[data-icon="#{first}"] svg[width="24"]))
     assert has_element?(view, "#examples svg.draw-path")
-    assert has_element?(view, ~s(#titled[role="img"][aria-hidden="false"] title), "Notifications")
+    assert has_element?(view, ~s|#titled[role="img"]:not([aria-hidden]) title|, "Notifications")
   end
 
   test "searches by name and pages through the matches", %{conn: conn} do

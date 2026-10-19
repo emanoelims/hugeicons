@@ -38,9 +38,7 @@ defmodule Hugeicons.DiffTest do
       <ul>
         <li :for={i <- @rows}>
           {i}
-          <.hugeicons_icon icon="FirstBracketIcon" size={@size}>
-            <title>Code</title>
-          </.hugeicons_icon>
+          <.hugeicons_icon icon="FirstBracketIcon" size={@size} label="Code" />
         </li>
       </ul>
       """
