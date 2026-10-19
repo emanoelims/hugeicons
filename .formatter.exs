@@ -3,7 +3,7 @@
   plugins: [Phoenix.LiveView.HTMLFormatter, Styler],
   inputs: [
     "*.{heex,ex,exs}",
-    "{config,lib,test}/**/*.{heex,ex,exs}",
+    "{bench,config,lib,test}/**/*.{heex,ex,exs}",
     ".github/scripts/*.exs"
   ]
 ]
