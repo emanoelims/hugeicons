@@ -29,9 +29,31 @@ defmodule Hugeicons.Cache do
 
   @doc """
   Returns the icon sets of every configured style, downloading the missing ones.
+
+  Styles are ensured in parallel (each has its own lock), so a cold build waits
+  for the slowest download rather than for all of them in a row.
   """
-  @spec load!(Config.t()) :: %{Style.t() => Fetcher.icon_set()}
-  def load!(%Config{styles: styles} = config), do: Map.new(styles, &{&1, ensure!(config, &1)})
+  @spec load!(Config.t(), keyword()) :: %{Style.t() => Fetcher.icon_set()}
+  def load!(%Config{styles: styles} = config, req_options \\ []) do
+    # Only the compiling process waits for modules that are not compiled yet; the
+    # tasks below would fail on them instead, so make sure they exist first.
+    Enum.each([Fetcher, Hugeicons.Converter, Hugeicons.Error, Style], &Code.ensure_compiled!/1)
+
+    styles
+    |> Task.async_stream(&ensure_captured(config, &1, req_options), timeout: :infinity, max_concurrency: length(styles))
+    |> Enum.reduce(%{}, fn
+      {:ok, {:ok, style, set}}, sets -> Map.put(sets, style, set)
+      {:ok, {:error, exception, stacktrace}}, _sets -> reraise exception, stacktrace
+    end)
+  end
+
+  # Brings a task's exception back to the caller, so compilation fails with the
+  # original Hugeicons.Error instead of an exit from a linked task.
+  defp ensure_captured(config, style, req_options) do
+    {:ok, style, ensure!(config, style, req_options)}
+  rescue
+    exception -> {:error, exception, __STACKTRACE__}
+  end
 
   @doc """
   Returns the icon set of `style`, from the cache when it is current.

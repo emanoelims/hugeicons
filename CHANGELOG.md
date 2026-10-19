@@ -11,4 +11,5 @@ following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The free `stroke-rounded` style is downloaded from npm on the first compilation; Pro styles are downloaded with your own license key from `HUGEICONS_LICENSE_KEY`. Icons are cached in `_build/hugeicons` and never shipped in the package.
 - A literal icon name that does not exist warns at compile time; a name computed at runtime raises with a suggestion.
 - `mix hugeicons.install` downloads the configured styles again.
+- Configured styles download in parallel, and compilation reports each download with its size and duration.
 - `Hugeicons.names/0` and `Hugeicons.variants/0` list what was compiled.

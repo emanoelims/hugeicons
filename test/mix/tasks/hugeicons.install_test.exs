@@ -4,8 +4,9 @@ defmodule Mix.Tasks.Hugeicons.InstallTest do
   alias Mix.Tasks.Hugeicons.Install
 
   test "reads every configured style again and reports it" do
+    previous = Mix.shell()
     Mix.shell(Mix.Shell.Process)
-    on_exit(fn -> Mix.shell(Mix.Shell.IO) end)
+    on_exit(fn -> Mix.shell(previous) end)
 
     assert Install.run([]) == :ok
 
