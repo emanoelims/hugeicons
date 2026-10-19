@@ -168,20 +168,18 @@ the list.
 
 ### Accessibility
 
-An icon without an inner block is decorative and renders `aria-hidden="true"`.
-To give one an accessible name, pass a `<title>`: the icon then renders
-`role="img"` and no `aria-hidden`, so screen readers announce it.
+An icon is decorative by default and renders `aria-hidden="true"`. To give one an
+accessible name, pass `label`: it is rendered as the `<title>`, and the icon then
+renders `role="img"` and no `aria-hidden`, so screen readers announce it.
 
 ```heex
-<.hugeicons_icon icon="Cancel01Icon">
-  <title>Close</title>
-</.hugeicons_icon>
+<.hugeicons_icon icon="Cancel01Icon" label="Close" />
 ```
 
-An `aria-label` or `aria-labelledby` also names the icon and renders `role="img"`.
-For a name that may be missing, prefer `aria-label={@label}`: a `nil` label leaves
-the icon decorative, while any inner block exposes it, even one that renders
-nothing (`<title :if={@label}>`).
+A `nil` or empty `label` keeps the icon decorative, so `label={@label}` works for a
+name that may be missing. An `aria-label` or `aria-labelledby` also names the icon.
+The inner block (for `<desc>`, `<animate>` and the like) never does: HEEx builds it
+even when it renders nothing, so it cannot tell a name is there.
 
 A `role` or `aria-hidden` you pass yourself always wins. Inside a button or link
 that already has a text label, leave the icon decorative.

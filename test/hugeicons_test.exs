@@ -88,19 +88,19 @@ defmodule HugeiconsTest do
     assert warnings =~ ~s(undefined attribute "fill" for component Hugeicons.hugeicons_icon/1)
   end
 
-  test "the inner block goes first inside the svg" do
+  test "the inner block goes after the title and before the paths" do
     assigns = %{}
-    html = rendered_to_string(~H|<.hugeicons_icon icon="Cancel01Icon">
-  <title>Close</title>
+    html = rendered_to_string(~H|<.hugeicons_icon icon="Cancel01Icon" label="Close">
+  <desc>An x</desc>
 </.hugeicons_icon>|)
 
-    assert html =~ ~r{<svg[^>]*>\s*<title>Close</title>\s*<path}
+    assert html =~ ~r{<svg[^>]*><title>Close</title>\s*<desc>An x</desc>\s*<path}
   end
 
   describe "accessibility" do
     defp occurrences(html, text), do: html |> String.split(text) |> length() |> Kernel.-(1)
 
-    test "an icon without an inner block is hidden from assistive technology" do
+    test "an icon without a name is hidden from assistive technology" do
       assigns = %{}
       html = rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" />|)
 
@@ -109,14 +109,29 @@ defmodule HugeiconsTest do
       assert attr_of(svg(html), "role") == nil
     end
 
-    test "an icon with a title is exposed as an image" do
+    test "a label renders the title and exposes the icon as an image" do
       assigns = %{}
-      html = rendered_to_string(~H|<.hugeicons_icon icon="Cancel01Icon">
-  <title>Close</title>
-</.hugeicons_icon>|)
+      html = rendered_to_string(~H|<.hugeicons_icon icon="Cancel01Icon" label="Close" />|)
 
+      assert html =~ ~r{<svg[^>]*><title>Close</title><path}
       assert attr_of(svg(html), "role") == "img"
       refute html =~ "aria-hidden"
+    end
+
+    test "an inner block does not name the icon, even one that renders nothing" do
+      assigns = %{label: nil}
+
+      for html <- [
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon"></.hugeicons_icon>|),
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon">
+  <title :if={@label}>{@label}</title>
+</.hugeicons_icon>|),
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon">
+  <desc>A house</desc>
+</.hugeicons_icon>|)
+          ] do
+        assert {attr_of(svg(html), "aria-hidden"), attr_of(svg(html), "role")} == {"true", nil}
+      end
     end
 
     test "the caller's aria-hidden and role win and are rendered once" do
@@ -126,9 +141,10 @@ defmodule HugeiconsTest do
       assert occurrences(shown, "aria-hidden") == 1
       assert {attr_of(svg(shown), "aria-hidden"), attr_of(svg(shown), "role")} == {"false", nil}
 
-      titled = rendered_to_string(~H|<.hugeicons_icon icon="Cancel01Icon" role="graphics-symbol" aria-hidden="true">
-  <title>Close</title>
-</.hugeicons_icon>|)
+      titled =
+        rendered_to_string(
+          ~H|<.hugeicons_icon icon="Cancel01Icon" label="Close" role="graphics-symbol" aria-hidden="true" />|
+        )
 
       assert occurrences(titled, "role") == 1
       assert occurrences(titled, "aria-hidden") == 1
@@ -147,10 +163,12 @@ defmodule HugeiconsTest do
       end
     end
 
-    test "a nil label or aria-hidden leaves the icon decorative" do
+    test "a nil or empty label, aria-label or aria-hidden leaves the icon decorative" do
       assigns = %{label: nil}
 
       for html <- [
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" label={@label} />|),
+            rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" label="" />|),
             rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-label={@label} />|),
             rendered_to_string(~H|<.hugeicons_icon icon="Home01Icon" aria-hidden={@label} />|)
           ] do

@@ -67,18 +67,15 @@ defmodule Hugeicons do
 
   ## Accessibility
 
-  An icon without an inner block is decorative: it renders `aria-hidden="true"`.
-  Pass a `<title>` as the inner block to give it an accessible name; the icon then
+  An icon is decorative by default: it renders `aria-hidden="true"`. Pass `label` to
+  give it an accessible name; it is rendered as the `<title>`, and the icon then
   renders `role="img"` and no `aria-hidden`, so assistive technology announces it:
 
-      <.hugeicons_icon icon="Cancel01Icon">
-        <title>Close</title>
-      </.hugeicons_icon>
+      <.hugeicons_icon icon="Cancel01Icon" label="Close" />
 
-  An `aria-label` or `aria-labelledby` also names the icon and renders `role="img"`.
-  For a name that may be missing, prefer `aria-label={@label}`: a `nil` label leaves
-  the icon decorative, while any inner block exposes it, even one that renders
-  nothing (`<title :if={@label}>`).
+  A `nil` or empty `label` keeps the icon decorative. An `aria-label` or
+  `aria-labelledby` also names the icon. The inner block never does: HEEx builds it
+  even when it renders nothing.
 
   A `role` or `aria-hidden` you pass yourself always wins and is rendered once.
 
@@ -108,16 +105,24 @@ defmodule Hugeicons do
     default: false,
     doc: "keeps the stroke width constant on screen whatever the `size`."
 
+  attr :label, :string,
+    default: nil,
+    doc: """
+    the accessible name: rendered as the `<title>` and exposes the icon as an image. \
+    `nil` keeps the icon decorative.\
+    """
+
   # No `fill`: the root's static `fill="none"` lets each element choose its fill,
   # and a caller's `fill` would render a second, ignored `fill` attribute.
   attr :rest, :global,
     include: ~w(stroke),
     doc: """
-    They go to the `<svg>`. With an inner block, `aria-label` or `aria-labelledby`, `role="img"` \
-    is added; otherwise `aria-hidden="true"`. Your own `aria-hidden` and `role` take precedence.\
+    They go to the `<svg>`. With a `label`, `aria-label` or `aria-labelledby`, `role="img"` is \
+    added; otherwise `aria-hidden="true"`. Your own `aria-hidden` and `role` take precedence.\
     """
 
-  slot :inner_block, doc: "markup placed first inside `<svg>`, such as a `<title>`."
+  slot :inner_block,
+    doc: "markup placed inside `<svg>` before the paths, such as `<desc>` or `<animate>`; it does not name the icon."
 
   @spec hugeicons_icon(map()) :: Phoenix.LiveView.Rendered.t()
   def hugeicons_icon(assigns) do
@@ -147,8 +152,14 @@ defmodule Hugeicons do
       fill="none"
       color={@color}
       stroke-width={absolute_stroke_width(@stroke_width, @size)}
-      {global_attrs(@rest, @inner_block)}
-    >{render_slot(@inner_block)}{inner!(@show_alt, @icon, @variant, @alt_icon, @alt_variant)}</svg>
+      {global_attrs(@rest, @label)}
+    ><title :if={@label not in [nil, ""]}>{@label}</title>{render_slot(@inner_block)}{inner!(
+      @show_alt,
+      @icon,
+      @variant,
+      @alt_icon,
+      @alt_variant
+    )}</svg>
     """
   end
 
@@ -162,8 +173,14 @@ defmodule Hugeicons do
       fill="none"
       color={@color}
       stroke-width={@stroke_width}
-      {global_attrs(@rest, @inner_block)}
-    >{render_slot(@inner_block)}{inner!(@show_alt, @icon, @variant, @alt_icon, @alt_variant)}</svg>
+      {global_attrs(@rest, @label)}
+    ><title :if={@label not in [nil, ""]}>{@label}</title>{render_slot(@inner_block)}{inner!(
+      @show_alt,
+      @icon,
+      @variant,
+      @alt_icon,
+      @alt_variant
+    )}</svg>
     """
   end
 
@@ -171,10 +188,12 @@ defmodule Hugeicons do
   defp absolute_stroke_width(width, _size), do: width
 
   # A decorative icon is hidden from assistive technology; one with an accessible
-  # name (an inner block such as a `<title>`, or `aria-label`/`aria-labelledby`) is
-  # exposed as an image. The caller's own values win.
-  defp global_attrs(rest, inner_block) when is_map(rest) do
-    if inner_block != [] or named?(rest),
+  # name (`label`, `aria-label` or `aria-labelledby`) is exposed as an image. The
+  # inner block does not count: HEEx builds it for every call that is not
+  # self-closing, even when it renders nothing, so it cannot tell a name is there.
+  # The caller's own values win.
+  defp global_attrs(rest, label) when is_map(rest) do
+    if label not in [nil, ""] or named?(rest),
       do: put_default(rest, :role, "img"),
       else: put_default(rest, :"aria-hidden", "true")
   end

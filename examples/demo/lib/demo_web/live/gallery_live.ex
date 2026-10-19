@@ -280,9 +280,7 @@ defmodule DemoWeb.GalleryLive do
           </.example>
 
           <.example title="Accessible name" code={title_code()}>
-            <.hugeicons_icon id="titled" icon="Notification01Icon" aria-hidden="false" role="img">
-              <title>Notifications</title>
-            </.hugeicons_icon>
+            <.hugeicons_icon id="titled" icon="Notification01Icon" label="Notifications" />
           </.example>
         </div>
       </section>
@@ -388,13 +386,7 @@ defmodule DemoWeb.GalleryLive do
 
   defp title_code do
     ~S"""
-    <.hugeicons_icon
-      icon="Notification01Icon"
-      aria-hidden="false"
-      role="img"
-    >
-      <title>Notifications</title>
-    </.hugeicons_icon>
+    <.hugeicons_icon icon="Notification01Icon" label="Notifications" />
     """
   end
 end
