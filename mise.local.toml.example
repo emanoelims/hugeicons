@@ -7,4 +7,4 @@ HUGEICONS_LICENSE_KEY = ""
 # CI only: replaces the phoenix_live_view requirement in mix.exs to test the
 # lowest supported LiveView (see "Supported versions" in CONTRIBUTING.md). Leave
 # it unset here: with it, `mix deps.get` changes mix.lock.
-# LIVE_VIEW_REQUIREMENT = "~> 1.1.0"
+# HUGEICONS_LIVE_VIEW_REQUIREMENT = "~> 1.1.0"
