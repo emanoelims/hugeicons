@@ -73,6 +73,21 @@ defmodule HugeiconsTest do
     assert {attr_of(svg, "class"), attr_of(svg, "data-x"), attr_of(svg, "stroke")} == {"size-5", "1", "red"}
   end
 
+  test "fill is not accepted, so it cannot render a second, ignored fill" do
+    warnings =
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        Code.compile_string("""
+        defmodule HugeiconsTest.Fill do
+          use Phoenix.Component
+          import Hugeicons
+          def render(assigns), do: ~H|<.hugeicons_icon icon="Home01Icon" fill="red" />|
+        end
+        """)
+      end)
+
+    assert warnings =~ ~s(undefined attribute "fill" for component Hugeicons.hugeicons_icon/1)
+  end
+
   test "the inner block goes first inside the svg" do
     assigns = %{}
     html = rendered_to_string(~H|<.hugeicons_icon icon="Cancel01Icon">
