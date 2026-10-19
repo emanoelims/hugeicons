@@ -19,6 +19,9 @@ translation leaves it alone, and nothing waits for a font to load.
 
 ## Installation
 
+Requires Elixir 1.20 or later and Phoenix LiveView 1.1 or 1.2. CI tests the
+library against LiveView 1.2 and the latest 1.1 release.
+
 ```elixir
 def deps do
   [
